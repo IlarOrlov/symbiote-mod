@@ -31,7 +31,6 @@ public final class SymbioteConfig {
 	private static volatile SymbioteConfig instance = new SymbioteConfig();
 	private static Path configPath;
 
-	public boolean syncCraftingGrid = true;
 	public boolean syncArmor = true;
 	public boolean syncOffhand = true;
 	public boolean enableHotbarOwnership = false;
@@ -86,7 +85,6 @@ public final class SymbioteConfig {
 
 	public SymbioteConfig copy() {
 		SymbioteConfig copy = new SymbioteConfig();
-		copy.syncCraftingGrid = this.syncCraftingGrid;
 		copy.syncArmor = this.syncArmor;
 		copy.syncOffhand = this.syncOffhand;
 		copy.enableHotbarOwnership = this.enableHotbarOwnership;
