@@ -1,0 +1,64 @@
+package com.symbiote.network;
+
+import com.symbiote.SymbioteConfig;
+import com.symbiote.SymbioteMod;
+
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+
+/**
+ * Sent from a client's Symbiote settings screen to the server, asking it to
+ * change the shared settings. The server only honors this from the
+ * singleplayer host or a server operator (see the handler registered in
+ * {@link SymbioteNetworking}); anyone else's request is silently dropped
+ * (with a chat message telling them so).
+ */
+public record UpdateConfigPayload(
+	boolean syncCraftingGrid,
+	boolean syncArmor,
+	boolean syncOffhand,
+	boolean enableHotbarOwnership,
+	SymbioteConfig.HotbarOwnershipMode hotbarOwnershipMode
+) implements CustomPacketPayload {
+	public static final CustomPacketPayload.Type<UpdateConfigPayload> TYPE = new CustomPacketPayload.Type<>(SymbioteMod.id("update_config"));
+
+	public static final StreamCodec<RegistryFriendlyByteBuf, UpdateConfigPayload> CODEC = StreamCodec.composite(
+		ByteBufCodecs.BOOL, UpdateConfigPayload::syncCraftingGrid,
+		ByteBufCodecs.BOOL, UpdateConfigPayload::syncArmor,
+		ByteBufCodecs.BOOL, UpdateConfigPayload::syncOffhand,
+		ByteBufCodecs.BOOL, UpdateConfigPayload::enableHotbarOwnership,
+		ByteBufCodecs.idMapper(
+			id -> SymbioteConfig.HotbarOwnershipMode.values()[id],
+			SymbioteConfig.HotbarOwnershipMode::ordinal
+		),
+		UpdateConfigPayload::hotbarOwnershipMode,
+		UpdateConfigPayload::new
+	);
+
+	public static UpdateConfigPayload fromConfig(final SymbioteConfig config) {
+		return new UpdateConfigPayload(
+			config.syncCraftingGrid,
+			config.syncArmor,
+			config.syncOffhand,
+			config.enableHotbarOwnership,
+			config.hotbarOwnershipMode
+		);
+	}
+
+	public SymbioteConfig toConfig() {
+		SymbioteConfig config = new SymbioteConfig();
+		config.syncCraftingGrid = this.syncCraftingGrid;
+		config.syncArmor = this.syncArmor;
+		config.syncOffhand = this.syncOffhand;
+		config.enableHotbarOwnership = this.enableHotbarOwnership;
+		config.hotbarOwnershipMode = this.hotbarOwnershipMode;
+		return config;
+	}
+
+	@Override
+	public CustomPacketPayload.Type<UpdateConfigPayload> type() {
+		return TYPE;
+	}
+}
