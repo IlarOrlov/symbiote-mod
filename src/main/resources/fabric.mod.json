@@ -1,0 +1,39 @@
+{
+	"schemaVersion": 1,
+	"id": "symbiote",
+	"version": "${version}",
+	"name": "Symbiote",
+	"description": "One inventory, shared by every player on the server. Everyone reads and writes the same 36 storage slots, 4 armor slots, offhand and hotbar -- pick something up as one player and everyone can use it. Each hotbar slot also shows a small color/name tag for whichever player is currently \"assigned\" to it, purely as a visual identifier.",
+	"authors": [
+		"Ilar Orlov (Feanor)"
+	],
+	"contact": {
+		"homepage": "https://github.com/IlarOrlov/symbiote-mod",
+		"sources": "https://github.com/IlarOrlov/symbiote-mod",
+		"issues": "https://github.com/IlarOrlov/symbiote-mod/issues"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/symbiote/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.symbiote.SymbioteMod"
+		],
+		"client": [
+			"com.symbiote.client.SymbioteModClient"
+		]
+	},
+	"mixins": [
+		"symbiote.mixins.json",
+		{
+			"config": "symbiote.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
