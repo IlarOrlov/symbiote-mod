@@ -36,6 +36,8 @@ public final class SymbioteConfig {
 	public boolean enableHotbarOwnership = false;
 	public boolean syncHealth = false;
 	public boolean syncHunger = false;
+	/** When on, sharing is scoped per-team ({@code /symbiote team}) instead of one pool for the whole server. */
+	public boolean teamsEnabled = false;
 
 	public static SymbioteConfig get() {
 		return instance;
@@ -92,6 +94,7 @@ public final class SymbioteConfig {
 		copy.enableHotbarOwnership = this.enableHotbarOwnership;
 		copy.syncHealth = this.syncHealth;
 		copy.syncHunger = this.syncHunger;
+		copy.teamsEnabled = this.teamsEnabled;
 		return copy;
 	}
 }

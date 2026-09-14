@@ -56,6 +56,16 @@ public final class SymbioteOptionsScreen extends Screen {
 		content.addChild(toggleRow("Share health toggle", this.working.syncHealth, v -> this.working.syncHealth = v));
 		content.addChild(toggleRow("Share hunger", this.working.syncHunger, v -> this.working.syncHunger = v));
 
+		content.addChild(spacer());
+		content.addChild(sectionLabel("Teams"));
+		content.addChild(toggleRow("Split into teams (use /symbiote team) instead of one server-wide pool",
+			this.working.teamsEnabled, v -> this.working.teamsEnabled = v));
+
+		content.addChild(spacer());
+		content.addChild(sectionLabel("This device only"));
+		content.addChild(toggleRow("Low-health screen warning",
+			SymbioteClientConfig.get().lowHealthWarningEnabled, SymbioteClientConfig::setLowHealthWarningEnabled));
+
 		LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
 		footer.addChild(Button.builder(Component.literal("Save"), button -> {
 			SymbioteModClient.sendConfigUpdate(this.working);

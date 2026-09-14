@@ -1,4 +1,5 @@
 {
 	"key.categories.symbiote.main": "Symbiote",
-	"key.symbiote.open_settings": "Open Symbiote Settings"
+	"key.symbiote.open_settings": "Open Symbiote Settings",
+	"key.symbiote.request_slot": "Request Hovered Slot"
 }

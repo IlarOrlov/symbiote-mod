@@ -12,12 +12,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.symbiote.HotbarOwnership;
-import com.symbiote.SharedInventory;
 import com.symbiote.SymbioteConfig;
+import com.symbiote.Team;
+import com.symbiote.TeamManager;
 import com.symbiote.network.HotbarOwnersPayload;
 
 import net.minecraft.core.NonNullList;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -75,8 +75,7 @@ public abstract class HotbarLockMixin {
 			return;
 		}
 
-		ServerLevel level = (ServerLevel) player.level();
-		List<UUID> owners = HotbarOwnership.currentOwners(level.getServer());
+		List<UUID> owners = HotbarOwnership.currentOwnersFor(serverPlayer);
 
 		int hoveredHotbarSlot = this.symbiote$hotbarIndexOf(slotId, serverPlayer);
 		boolean touchesLockedSlotDirectly = this.symbiote$isLockedToSomeoneElse(hoveredHotbarSlot, owners, serverPlayer)
@@ -89,9 +88,10 @@ public abstract class HotbarLockMixin {
 
 		this.symbiote$clicker = serverPlayer.getUUID();
 
+		Team team = TeamManager.teamOf(serverPlayer);
 		ItemStack[] snapshot = new ItemStack[HotbarOwnersPayload.SLOT_COUNT];
 		for (int i = 0; i < snapshot.length; i++) {
-			snapshot[i] = SharedInventory.ITEMS.get(i).copy();
+			snapshot[i] = team.items.get(i).copy();
 		}
 		this.symbiote$before = snapshot;
 		this.symbiote$beforeCarried = this.getCarried().copy();
@@ -105,12 +105,12 @@ public abstract class HotbarLockMixin {
 			return;
 		}
 
-		ServerLevel level = (ServerLevel) player.level();
-		List<UUID> owners = HotbarOwnership.currentOwners(level.getServer());
+		List<UUID> owners = HotbarOwnership.currentOwnersFor(serverPlayer);
+		Team team = TeamManager.teamOf(serverPlayer);
 
 		boolean violated = false;
 		for (int i = 0; i < before.length; i++) {
-			if (this.symbiote$isLockedToSomeoneElse(i, owners, serverPlayer) && !ItemStack.matches(before[i], SharedInventory.ITEMS.get(i))) {
+			if (this.symbiote$isLockedToSomeoneElse(i, owners, serverPlayer) && !ItemStack.matches(before[i], team.items.get(i))) {
 				violated = true;
 				break;
 			}
@@ -121,7 +121,7 @@ public abstract class HotbarLockMixin {
 		}
 
 		for (int i = 0; i < before.length; i++) {
-			SharedInventory.ITEMS.set(i, before[i]);
+			team.items.set(i, before[i]);
 		}
 		this.setCarried(this.symbiote$beforeCarried);
 		this.broadcastFullState();
