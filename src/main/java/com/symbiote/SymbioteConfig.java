@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -61,25 +62,41 @@ public final class SymbioteConfig {
 				SymbioteConfig loaded = GSON.fromJson(reader, SymbioteConfig.class);
 				if (loaded != null) {
 					instance = loaded;
+					SymbioteMod.LOGGER.info("[SymbioteConfig] Loaded config/symbiote.json: {}", describe(instance));
+				} else {
+					SymbioteMod.LOGGER.warn("[SymbioteConfig] config/symbiote.json parsed as null - keeping defaults: {}", describe(instance));
 				}
 			} catch (IOException | RuntimeException e) {
-				SymbioteMod.LOGGER.warn("Failed to read config/symbiote.json, using defaults", e);
+				SymbioteMod.LOGGER.warn("[SymbioteConfig] Failed to read config/symbiote.json, using defaults: {}", describe(instance), e);
 			}
+		} else {
+			SymbioteMod.LOGGER.info("[SymbioteConfig] No config/symbiote.json yet - using defaults: {}", describe(instance));
 		}
 		save();
 	}
 
+	/**
+	 * Writes to a temporary sibling file and atomically moves it over the
+	 * real one, so a write that's interrupted (crash, forced process kill,
+	 * the game closing mid-write) can never leave {@code symbiote.json} in a
+	 * half-written, unparseable state - which {@link #load} would otherwise
+	 * silently treat as "no valid config" and quietly reset to defaults, on
+	 * top of the actual data loss from the interrupted write itself.
+	 */
 	public static synchronized void save() {
 		if (configPath == null) {
 			configPath = FabricLoader.getInstance().getConfigDir().resolve("symbiote.json");
 		}
 		try {
 			Files.createDirectories(configPath.getParent());
-			try (Writer writer = Files.newBufferedWriter(configPath, StandardCharsets.UTF_8)) {
+			Path tmp = configPath.resolveSibling("symbiote.json.tmp");
+			try (Writer writer = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
 				GSON.toJson(instance, writer);
 			}
+			Files.move(tmp, configPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			SymbioteMod.LOGGER.info("[SymbioteConfig] Saved config/symbiote.json: {}", describe(instance));
 		} catch (IOException e) {
-			SymbioteMod.LOGGER.warn("Failed to write config/symbiote.json", e);
+			SymbioteMod.LOGGER.warn("[SymbioteConfig] Failed to write config/symbiote.json", e);
 		}
 	}
 
@@ -101,5 +118,16 @@ public final class SymbioteConfig {
 		copy.teamsEnabled = this.teamsEnabled;
 		copy.crudeHumor = this.crudeHumor;
 		return copy;
+	}
+
+	private static String describe(final SymbioteConfig config) {
+		return "syncArmor=" + config.syncArmor
+			+ ", syncOffhand=" + config.syncOffhand
+			+ ", enableHotbarOwnership=" + config.enableHotbarOwnership
+			+ ", syncHealth=" + config.syncHealth
+			+ ", syncHunger=" + config.syncHunger
+			+ ", syncExperience=" + config.syncExperience
+			+ ", teamsEnabled=" + config.teamsEnabled
+			+ ", crudeHumor=" + config.crudeHumor;
 	}
 }
