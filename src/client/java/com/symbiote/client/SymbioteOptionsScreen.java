@@ -7,6 +7,7 @@ import com.symbiote.SymbioteConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.ScrollableLayout;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
@@ -19,15 +20,19 @@ import net.minecraft.network.chat.Component;
  * actually applies the change if the sender is the singleplayer host or an
  * operator ({@link com.symbiote.network.SymbioteNetworking#canConfigure}); a
  * request from anyone else is dropped with a chat message telling them so, so
- * this screen stays safe to open (read-only) for everyone.
+ * this screen stays safe to open (read-only) for everyone. The one exception
+ * is the "This device only" section at the bottom, which is purely local and
+ * always takes effect for whoever's looking at it, regardless of permission.
  */
 public final class SymbioteOptionsScreen extends Screen {
 	private static final int ROW_WIDTH = 300;
+	private static final int MIN_SCROLL_HEIGHT = 130;
 	private static final Component SECTION_COLOR = Component.empty();
 
 	private final Screen parent;
 	private final SymbioteConfig working;
 	private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
+	private ScrollableLayout scrollArea;
 
 	public SymbioteOptionsScreen(final Screen parent, final SymbioteConfig initial) {
 		super(Component.literal("Symbiote Settings"));
@@ -39,7 +44,9 @@ public final class SymbioteOptionsScreen extends Screen {
 	protected void init() {
 		this.layout.addTitleHeader(this.title, this.font);
 
-		LinearLayout content = this.layout.addToContents(LinearLayout.vertical().spacing(6));
+		LinearLayout outer = this.layout.addToContents(LinearLayout.vertical());
+
+		LinearLayout content = LinearLayout.vertical().spacing(6);
 		content.defaultCellSetting().alignHorizontallyCenter();
 
 		content.addChild(sectionLabel("What's shared"));
@@ -55,16 +62,20 @@ public final class SymbioteOptionsScreen extends Screen {
 		content.addChild(sectionLabel("Shared vitals"));
 		content.addChild(toggleRow("Share health toggle", this.working.syncHealth, v -> this.working.syncHealth = v));
 		content.addChild(toggleRow("Share hunger", this.working.syncHunger, v -> this.working.syncHunger = v));
+		content.addChild(toggleRow("Share XP", this.working.syncExperience, v -> this.working.syncExperience = v));
 
 		content.addChild(spacer());
 		content.addChild(sectionLabel("Teams"));
-		content.addChild(toggleRow("Split into teams (use /symbiote team) instead of one server-wide pool",
-			this.working.teamsEnabled, v -> this.working.teamsEnabled = v));
+		content.addChild(toggleRow("Split into teams", this.working.teamsEnabled, v -> this.working.teamsEnabled = v));
 
 		content.addChild(spacer());
 		content.addChild(sectionLabel("This device only"));
 		content.addChild(toggleRow("Low-health screen warning",
 			SymbioteClientConfig.get().lowHealthWarningEnabled, SymbioteClientConfig::setLowHealthWarningEnabled));
+
+		this.scrollArea = new ScrollableLayout(this.minecraft, content, MIN_SCROLL_HEIGHT);
+		this.scrollArea.setMinWidth(ROW_WIDTH + 20);
+		outer.addChild(this.scrollArea);
 
 		LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
 		footer.addChild(Button.builder(Component.literal("Save"), button -> {
@@ -79,7 +90,10 @@ public final class SymbioteOptionsScreen extends Screen {
 
 	@Override
 	protected void repositionElements() {
+		this.scrollArea.setMaxHeight(MIN_SCROLL_HEIGHT);
 		this.layout.arrangeElements();
+		int spaceBelowScrollArea = this.height - this.layout.getFooterHeight() - this.scrollArea.getRectangle().bottom();
+		this.scrollArea.setMaxHeight(this.scrollArea.getHeight() + spaceBelowScrollArea);
 	}
 
 	private StringWidget sectionLabel(final String text) {

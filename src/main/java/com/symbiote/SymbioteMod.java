@@ -32,7 +32,7 @@ public class SymbioteMod implements ModInitializer {
 		SymbioteCommands.register();
 
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-			TeamManager.resetAll();
+			TeamManager.load();
 			// A death that drops/clears the shared inventory would empty it for every
 			// player at once, not just the one who died - keepInventory is required.
 			server.getGameRules().set(GameRules.KEEP_INVENTORY, Boolean.TRUE, server);

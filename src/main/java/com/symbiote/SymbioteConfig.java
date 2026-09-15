@@ -31,13 +31,14 @@ public final class SymbioteConfig {
 	private static volatile SymbioteConfig instance = new SymbioteConfig();
 	private static Path configPath;
 
-	public boolean syncArmor = true;
-	public boolean syncOffhand = true;
+	public boolean syncArmor = false;
+	public boolean syncOffhand = false;
 	public boolean enableHotbarOwnership = false;
 	public boolean syncHealth = false;
 	public boolean syncHunger = false;
+	public boolean syncExperience = false;
 	/** When on, sharing is scoped per-team ({@code /symbiote team}) instead of one pool for the whole server. */
-	public boolean teamsEnabled = false;
+	public boolean teamsEnabled = true;
 
 	public static SymbioteConfig get() {
 		return instance;
@@ -94,6 +95,7 @@ public final class SymbioteConfig {
 		copy.enableHotbarOwnership = this.enableHotbarOwnership;
 		copy.syncHealth = this.syncHealth;
 		copy.syncHunger = this.syncHunger;
+		copy.syncExperience = this.syncExperience;
 		copy.teamsEnabled = this.teamsEnabled;
 		return copy;
 	}
