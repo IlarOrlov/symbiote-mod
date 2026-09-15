@@ -8,6 +8,7 @@ import com.symbiote.SymbioteConfig;
 import com.symbiote.SymbioteMod;
 import com.symbiote.client.mixin.ContainerScreenHoveredSlotAccessor;
 import com.symbiote.client.mixin.KeyMappingKeyAccessor;
+import com.symbiote.network.ForceHotbarSlotPayload;
 import com.symbiote.network.HotbarOwnersPayload;
 import com.symbiote.network.RequestSlotPayload;
 import com.symbiote.network.SyncConfigPayload;
@@ -42,6 +43,16 @@ public class SymbioteModClient implements ClientModInitializer {
 
 		ClientPlayNetworking.registerGlobalReceiver(HotbarOwnersPayload.TYPE, (payload, context) -> hotbarOwners = payload.owners());
 		ClientPlayNetworking.registerGlobalReceiver(SyncConfigPayload.TYPE, (payload, context) -> lastKnownConfig = payload.toConfig());
+		// The server just forced our selected slot to move (a join/respawn
+		// conflict with a teammate) - selection is otherwise entirely
+		// client-driven, so without this our own view of it would never
+		// learn about a server-side move, and effectiveOwner()'s local
+		// prediction would keep showing our frame on the old slot too.
+		ClientPlayNetworking.registerGlobalReceiver(ForceHotbarSlotPayload.TYPE, (payload, context) -> {
+			if (context.player() != null) {
+				context.player().getInventory().setSelectedSlot(payload.slot());
+			}
+		});
 
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, SymbioteMod.id("hotbar_owners"), new HotbarOwnerOverlay());
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, SymbioteMod.id("low_health_warning"), new LowHealthOverlay());
